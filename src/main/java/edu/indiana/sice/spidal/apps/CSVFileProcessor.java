@@ -10,6 +10,7 @@ public class CSVFileProcessor {
     private final static String OUTPUT_OPTION = "output";
     private static final String DIM_OPTION = "dim";
     private static final String POINTS_OPTION = "points";
+    private static final String OUTPUT_CSV = "output_csv";
 
     private static Options setupOptions() {
         final Option input = Option.builder(INPUT_OPTION)
@@ -32,12 +33,18 @@ public class CSVFileProcessor {
                 .hasArg()
                 .desc("Output file path")
                 .build();
+        final Option outputCsv = Option.builder(OUTPUT_CSV)
+                .required()
+                .hasArg()
+                .desc("Output csv file path")
+                .build();
         final Options options = new Options();
         options
                 .addOption(input)
                 .addOption(points)
                 .addOption(dimension)
-                .addOption(output);
+                .addOption(output)
+                .addOption(outputCsv);
         return options;
     }
 
@@ -50,7 +57,8 @@ public class CSVFileProcessor {
             String points = commandLine.getOptionValue(POINTS_OPTION);
             String dimension = commandLine.getOptionValue(DIM_OPTION);
             String output = commandLine.getOptionValue(OUTPUT_OPTION);
-            String[] newArgs = {input, points, dimension, output};
+            String outputCsv = commandLine.getOptionValue(OUTPUT_CSV);
+            String[] newArgs = {input, points, dimension, output, outputCsv};
             System.out.println("Running the distance calculation:" + Arrays.toString(newArgs));
             DistanceCalculation.run(newArgs);
         } catch (ParseException e) {

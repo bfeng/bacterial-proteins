@@ -2,14 +2,13 @@ package edu.indiana.sice.spidal.apps;
 
 import mpi.MPIException;
 
-import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static edu.indiana.sice.spidal.apps.Utils.calculateEuclideanDistance;
 
@@ -21,6 +20,7 @@ class DistanceCalculation {
             Utils.printMessage("Starting with " + ParallelOps.worldProcsCount + "Processes");
             String inputFile = args[0];
             String outputFile = args[3];
+            String outputFileCsv = args[4];
             int numPoints = Integer.valueOf(args[1]);
             int dimension = Integer.valueOf(args[2]);
             double newMean = 0;
@@ -28,6 +28,9 @@ class DistanceCalculation {
             BufferedReader br = Files.newBufferedReader(Paths.get(inputFile));
             FileOutputStream fos = new FileOutputStream(outputFile);
             FileChannel fc = fos.getChannel();
+
+            BufferedWriter csvWriter = new BufferedWriter(new FileWriter(outputFileCsv, true));
+
 
             ParallelOps.setParallelDecomposition(numPoints, dimension);
             double[][] points = new double[numPoints][dimension];
@@ -128,9 +131,13 @@ class DistanceCalculation {
                 byteBuffer.asShortBuffer().put(row);
                 if (i % 500 == 0) Utils.printMessage(".");
                 fc.write(byteBuffer, (filePosition + ((long) i) * numPoints * 2));
+                String rowdata = (Arrays.toString(row)).replace("[", "").replace("]", "");
+                csvWriter.write(rowdata);
+                System.out.println(rowdata);
             }
 
             fc.close();
+            csvWriter.close();
             System.out.println("Process " + ParallelOps.worldProcRank + " Done");
             ParallelOps.tearDownParallelism();
 
