@@ -2,3 +2,6 @@
 .idea/
 target/
 scripts/*.bin
+data/*
+!data/data.csv
+bin/*
