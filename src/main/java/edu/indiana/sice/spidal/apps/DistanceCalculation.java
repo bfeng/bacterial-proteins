@@ -132,7 +132,7 @@ class DistanceCalculation {
                 if (i % 500 == 0) Utils.printMessage(".");
                 fc.write(byteBuffer, (filePosition + ((long) i) * numPoints * 2));
                 String rowdata = (Arrays.toString(row)).replace("[", "").replace("]", "");
-                csvWriter.write(rowdata);
+                csvWriter.write(rowdata + "\n");
                 System.out.println(rowdata);
             }
 
