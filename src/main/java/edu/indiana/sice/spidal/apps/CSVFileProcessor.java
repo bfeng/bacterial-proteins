@@ -1,7 +1,9 @@
 package edu.indiana.sice.spidal.apps;
 
+import mpi.MPIException;
 import org.apache.commons.cli.*;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 public class CSVFileProcessor {
@@ -34,7 +36,7 @@ public class CSVFileProcessor {
                 .desc("Output file path")
                 .build();
         final Option outputCsv = Option.builder(OUTPUT_CSV)
-                .required()
+                .optionalArg(true)
                 .hasArg()
                 .desc("Output csv file path")
                 .build();
@@ -54,13 +56,20 @@ public class CSVFileProcessor {
         try {
             CommandLine commandLine = parser.parse(options, args);
             String input = commandLine.getOptionValue(INPUT_OPTION);
-            String points = commandLine.getOptionValue(POINTS_OPTION);
-            String dimension = commandLine.getOptionValue(DIM_OPTION);
+            int points = Integer.parseInt(commandLine.getOptionValue(POINTS_OPTION));
+            int dimension = Integer.parseInt(commandLine.getOptionValue(DIM_OPTION));
             String output = commandLine.getOptionValue(OUTPUT_OPTION);
-            String outputCsv = commandLine.getOptionValue(OUTPUT_CSV);
-            String[] newArgs = {input, points, dimension, output, outputCsv};
-            System.out.println("Running the distance calculation:" + Arrays.toString(newArgs));
-            DistanceCalculation.run(newArgs);
+            String outputCsv = null;
+            if (commandLine.hasOption(OUTPUT_CSV)) {
+                outputCsv = commandLine.getOptionValue(OUTPUT_CSV);
+            }
+
+            System.out.println("Running the distance calculation:" + Arrays.toString(args));
+            ParallelOps.setupParallelism(args);
+            DistanceCalculation.run(input, output, points, dimension, outputCsv);
+            ParallelOps.tearDownParallelism();
+        } catch (MPIException | IOException e) {
+            e.printStackTrace();
         } catch (ParseException e) {
             System.err.println(e.getMessage());
             HelpFormatter formatter = new HelpFormatter();
