@@ -6,6 +6,6 @@
 
 ./run_damds.sh
 
-./format_data.sh ../data/damds-points.txt
+./format_data.sh ../output/damds-points.txt
 
 rm *.bin
