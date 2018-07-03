@@ -5,4 +5,4 @@ install:
 	mvn clean install
 
 gendis:
-	cd scripts; sh generate_distance_matrix.sh; cd ..
+	cd scripts; bash generate_distance_matrix.sh; cd ..
