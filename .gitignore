@@ -3,5 +3,6 @@
 target/
 scripts/*.bin
 data/*
-!data/data.csv
+!data/data.tsv
 bin/*
+output/*
