@@ -23,6 +23,11 @@ cd local_scripts
 ./run_all.sh
 ```
 
+## Run on Cluter Tempest
+```bash
+cd tempest_scripts
+sbatch slurm_job.sh
+```
 
 ## Visualize
 
