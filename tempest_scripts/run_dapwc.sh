@@ -5,4 +5,4 @@ cp=$HOME/.m2/repository/com/google/guava/guava/15.0/guava-15.0.jar:$HOME/.m2/rep
 
 confFile=./dapwc-config.properties
 
-mpirun -n 4 java -cp $cp edu.indiana.soic.spidal.dapwc.Program -c $confFile -n 1 -t 2
+mpirun -mca btl ^openib java -cp ${cp} edu.indiana.soic.spidal.dapwc.Program -c ${confFile} -n 32 -t 2

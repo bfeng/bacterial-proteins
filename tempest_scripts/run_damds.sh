@@ -4,4 +4,4 @@ cp=$HOME/.m2/repository/com/google/guava/guava/15.0/guava-15.0.jar:$HOME/sali/so
 
 confFile=./damds-config.properties
 
-mpirun -n 2 java -cp ${cp} edu.indiana.soic.spidal.damds.Program -c ${confFile} -n 2 -t 1
+mpirun --mca btl ^openib java -cp ${cp} edu.indiana.soic.spidal.damds.Program -c ${confFile} -n 32 -t 1
