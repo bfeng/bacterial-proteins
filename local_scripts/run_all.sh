@@ -2,6 +2,11 @@
 
 rm ../output/*
 
+cd ../
+mvn clean package
+
+cd ./local_scripts
+
 ./generate_adajacency_matrix.sh
 
 ./generate_distance_matrix.sh

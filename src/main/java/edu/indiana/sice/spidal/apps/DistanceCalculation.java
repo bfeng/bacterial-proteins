@@ -10,7 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import static edu.indiana.sice.spidal.apps.Utils.calculateEuclideanDistance;
+import static edu.indiana.sice.spidal.apps.Utils.calculateDistance;
 
 class DistanceCalculation {
 
@@ -23,7 +23,7 @@ class DistanceCalculation {
         FileChannel fc = fos.getChannel();
         BufferedWriter csvWriter = null;
         if (outputFileCsv != null) {
-            csvWriter = new BufferedWriter(new FileWriter(outputFileCsv, true));
+            csvWriter = new BufferedWriter(new FileWriter(outputFileCsv, false));
         }
         ParallelOps.setParallelDecomposition(numPoints, dimension);
         double[][] points = new double[numPoints][dimension];
@@ -65,23 +65,23 @@ class DistanceCalculation {
         Utils.printMessage("End calculating mean and sd");
 
         //Update value with new normalized values
-        Utils.printMessage("Start calculating normalized data");
-
-        for (int i = 0; i < numPoints; i++) {
-            for (int j = 0; j < dimension; j++) {
-                if (sd[j] == 0) continue;
-                points[i][j] = newMean + ((points[i][j] - means[j]) / sd[j]) * newSd;
-            }
-        }
-
-        Utils.printMessage("End calculating normalized data");
+//        Utils.printMessage("Start calculating normalized data");
+//
+//        for (int i = 0; i < numPoints; i++) {
+//            for (int j = 0; j < dimension; j++) {
+//                if (sd[j] == 0) continue;
+//                points[i][j] = newMean + ((points[i][j] - means[j]) / sd[j]) * newSd;
+//            }
+//        }
+//
+//        Utils.printMessage("End calculating normalized data");
 
         double[][] localDistances = new double[ParallelOps.procRowCount][numPoints];
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
             for (int j = 0; j < numPoints; j++) {
-                double distance = calculateEuclideanDistance(points[i + ParallelOps.procRowStartOffset], points[j], dimension);
+                double distance = calculateDistance(points[i + ParallelOps.procRowStartOffset], points[j], i + ParallelOps.procRowStartOffset, j, dimension);
                 localDistances[i][j] = distance;
-                disMean += distance;
+                if (distance < Double.MAX_VALUE) disMean += distance;
             }
             if (i % 1000 == 0) Utils.printMessage("Distance calculation ......");
         }
@@ -127,7 +127,6 @@ class DistanceCalculation {
             if (csvWriter != null) {
                 String rowdata = (Arrays.toString(row)).replace("[", "").replace("]", "");
                 csvWriter.write(rowdata + "\n");
-                System.out.println(rowdata);
             }
         }
 

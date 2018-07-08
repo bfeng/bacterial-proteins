@@ -9,13 +9,13 @@ import java.util.List;
 class Row {
     long start;
     long end;
-    double distance;
+    double score;
 
     Row(String rowLine) {
         String[] arr = rowLine.split("\t", 3);
         start = Long.parseLong(arr[0]);
         end = Long.parseLong(arr[1]);
-        distance = Double.parseDouble(arr[2]);
+        score = Double.parseDouble(arr[2]);
     }
 
     @Override
@@ -23,7 +23,7 @@ class Row {
         return "Row{" +
                 "start=" + start +
                 ", end=" + end +
-                ", distance=" + distance +
+                ", score=" + score +
                 '}';
     }
 }
@@ -72,8 +72,8 @@ public class DataConverter {
             assert rowIdx != -1 && colIdx != -1;
 
             // Symmetric matrix
-            matrixFile.writeTo(rowIdx, colIdx, row.distance);
-            matrixFile.writeTo(colIdx, rowIdx, row.distance);
+            matrixFile.writeTo(rowIdx, colIdx, row.score);
+            matrixFile.writeTo(colIdx, rowIdx, row.score);
         }
         matrixFile.close();
         bufferedReader.close();
