@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 
 import static edu.indiana.sice.spidal.apps.Utils.calculateDistance;
+import static edu.indiana.sice.spidal.apps.Utils.roundToShort;
 
 class DistanceCalculation {
 
@@ -87,16 +88,16 @@ class DistanceCalculation {
         Utils.printMessage("End calculating mean and sd");
 
         //Update value with new normalized values
-        Utils.printMessage("Start calculating normalized data");
-
-        for (int i = 0; i < numPoints; i++) {
-            for (int j = 0; j < dimension; j++) {
-                if (sd[j] == 0) continue;
-                points[i][j] = newMean + ((points[i][j] - means[j]) / sd[j]) * newSd;
-            }
-        }
-
-        Utils.printMessage("End calculating normalized data");
+//        Utils.printMessage("Start calculating normalized data");
+//
+//        for (int i = 0; i < numPoints; i++) {
+//            for (int j = 0; j < dimension; j++) {
+//                if (sd[j] == 0) continue;
+//                points[i][j] = newMean + ((points[i][j] - means[j]) / sd[j]) * newSd;
+//            }
+//        }
+//
+//        Utils.printMessage("End calculating normalized data");
 
         double[][] localDistances = new double[ParallelOps.procRowCount][numPoints];
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
@@ -140,7 +141,7 @@ class DistanceCalculation {
             ByteBuffer byteBuffer = ByteBuffer.allocate(numPoints * 2);
             byteBuffer.order(ByteOrder.BIG_ENDIAN);
             for (int j = 0; j < numPoints; j++) {
-                row[j] = (short) ((localDistances[i][j] / max) * Short.MAX_VALUE);
+                row[j] = roundToShort(localDistances[i][j], max);
             }
             byteBuffer.clear();
             byteBuffer.asShortBuffer().put(row);

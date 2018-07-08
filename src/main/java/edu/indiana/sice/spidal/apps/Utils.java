@@ -18,13 +18,21 @@ public class Utils {
         System.out.println(msg);
     }
 
+    /**
+     * @param value should be between 0 and 1
+     * @return
+     */
+    static short roundToShort(double value, double max) {
+        return (short) Math.round((value / max) * Short.MAX_VALUE);
+    }
+
     static double calculateDistance(double x[], int a, int b, double min, double max) {
         if (a == b) return 0;
         double score = x[b];
         if (score == 0) {
             return 1;
         } else {
-            return 1 - 0.2 * (score - min) / (max - min);
+            return 1.0 - 0.8 * (score - min) / (max - min);
         }
     }
 }
