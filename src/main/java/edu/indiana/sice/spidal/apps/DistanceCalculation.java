@@ -87,16 +87,16 @@ class DistanceCalculation {
         Utils.printMessage("End calculating mean and sd");
 
         //Update value with new normalized values
-//        Utils.printMessage("Start calculating normalized data");
-//
-//        for (int i = 0; i < numPoints; i++) {
-//            for (int j = 0; j < dimension; j++) {
-//                if (sd[j] == 0) continue;
-//                points[i][j] = newMean + ((points[i][j] - means[j]) / sd[j]) * newSd;
-//            }
-//        }
-//
-//        Utils.printMessage("End calculating normalized data");
+        Utils.printMessage("Start calculating normalized data");
+
+        for (int i = 0; i < numPoints; i++) {
+            for (int j = 0; j < dimension; j++) {
+                if (sd[j] == 0) continue;
+                points[i][j] = newMean + ((points[i][j] - means[j]) / sd[j]) * newSd;
+            }
+        }
+
+        Utils.printMessage("End calculating normalized data");
 
         double[][] localDistances = new double[ParallelOps.procRowCount][numPoints];
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
