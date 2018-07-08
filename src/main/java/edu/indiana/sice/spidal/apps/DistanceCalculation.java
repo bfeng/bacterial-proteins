@@ -14,6 +14,22 @@ import static edu.indiana.sice.spidal.apps.Utils.calculateDistance;
 
 class DistanceCalculation {
 
+    private static double[] calculateMinMaxNoneZero(double[][] points, final int dimension) throws MPIException {
+        double min = Double.MAX_VALUE, max = Double.MIN_VALUE;
+        for (int i = 0; i < ParallelOps.procRowCount; i++) {
+            for (int j = 0; j < dimension; j++) {
+                double score = points[ParallelOps.procRowStartOffset + i][j];
+                if (score != 0) {
+                    min = Math.min(min, score);
+                    max = Math.max(max, score);
+                }
+            }
+        }
+        min = ParallelOps.allReduceMin(min);
+        max = ParallelOps.allReduceMax(max);
+        return new double[]{min, max};
+    }
+
     static void run(final String inputFile, final String outputFile, final int numPoints, final int dimension, final String outputFileCsv) throws MPIException, IOException {
         Utils.printMessage("Starting with " + ParallelOps.worldProcsCount + "Processes");
         double newMean = 0;
@@ -37,6 +53,12 @@ class DistanceCalculation {
             }
             count++;
         }
+
+        // calculate min and max over all scores
+        final double[] minMax = calculateMinMaxNoneZero(points, dimension);
+        final double minScore = minMax[0];
+        final double maxScore = minMax[1];
+        Utils.printMessage(String.format("Min:%f, Max:%f", minScore, maxScore));
 
         //Calculate means and sd of features //TODO need to parallise
         Utils.printMessage("Start calculating mean and sd");
@@ -79,7 +101,7 @@ class DistanceCalculation {
         double[][] localDistances = new double[ParallelOps.procRowCount][numPoints];
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
             for (int j = 0; j < numPoints; j++) {
-                double distance = calculateDistance(points[i + ParallelOps.procRowStartOffset], points[j], i + ParallelOps.procRowStartOffset, j, dimension);
+                double distance = calculateDistance(points[i + ParallelOps.procRowStartOffset], i + ParallelOps.procRowStartOffset, j, minScore, maxScore);
                 localDistances[i][j] = distance;
                 if (distance < Double.MAX_VALUE) disMean += distance;
             }
