@@ -11,12 +11,12 @@ cd ./local_scripts
 
 ./generate_distance_matrix.sh
 
-./run_damds.sh
+#./run_damds.sh
+#
+#./format_data.sh ../output/damds-points.txt
+#
+#rm *.bin
 
-./format_data.sh ../output/damds-points.txt
+#./run_dapwc.sh
 
-rm *.bin
-
-./run_dapwc.sh
-
-./merge_and_format.sh ../output/damds-points.txt ../output/cluster-M10-C3txt
+#./merge_and_format.sh ../output/damds-points.txt ../output/cluster-M10-C3txt

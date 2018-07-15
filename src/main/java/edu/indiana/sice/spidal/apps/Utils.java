@@ -19,7 +19,7 @@ public class Utils {
     }
 
     /**
-     * @param value should be between 0 and 1
+     * @param value should be between 0 and max
      * @return
      */
     static short roundToShort(double value, double max) {
@@ -32,7 +32,10 @@ public class Utils {
         if (score == 0) {
             return 1;
         } else {
-            return 1.0 - 0.8 * (score - min) / (max - min);
+//            return 1.0 - 0.8 * (score - min) / (max - min);
+//            return 1.0 - (score - min) / (max - min);
+//            return 0.8 * (1.0 - (score - min) / (max - min));
+            return (1.0 / score - 1.0 / max) * min * max / (max - min);
         }
     }
 }
