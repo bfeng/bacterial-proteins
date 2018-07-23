@@ -3,4 +3,4 @@
 java -cp ../target/bacterial-proteins-jar-with-dependencies.jar \
         edu.indiana.sice.spidal.apps.DataConverter \
         ../data/data.tsv \
-        ../data/symmetric-adajacency-matrix.csv
+        ../data/score-matrix.csv

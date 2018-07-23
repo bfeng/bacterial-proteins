@@ -135,34 +135,18 @@ class DistanceCalculation {
         max = ParallelOps.allReduceMax(max);
         Utils.printMessage("Done Replacing distance larger than 3*SD with 3*SD, Max is : " + max);
 
-//        short[] row = new short[numPoints];
-//        long filePosition = ((long) ParallelOps.procRowStartOffset) * numPoints * 2;
-//        for (int i = 0; i < ParallelOps.procRowCount; i++) {
-//            ByteBuffer byteBuffer = ByteBuffer.allocate(numPoints * 2);
-//            byteBuffer.order(ByteOrder.BIG_ENDIAN);
-//            for (int j = 0; j < numPoints; j++) {
-//                row[j] = roundToShort(localDistances[i][j], max);
-//            }
-//            byteBuffer.clear();
-//            byteBuffer.asShortBuffer().put(row);
-//            if (i % 500 == 0) Utils.printMessage(".");
-//            fc.write(byteBuffer, (filePosition + ((long) i) * numPoints * 2));
-//            if (csvWriter != null) {
-//                String rowdata = (Arrays.toString(row)).replace("[", "").replace("]", "");
-//                csvWriter.write(rowdata + "\n");
-//            }
-//        }
-
-        double[] row = new double[numPoints];
-        long filePosition = ((long) ParallelOps.procRowStartOffset) * numPoints * 8;
+        short[] row = new short[numPoints];
+        long filePosition = ((long) ParallelOps.procRowStartOffset) * numPoints * 2;
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
-            ByteBuffer byteBuffer = ByteBuffer.allocate(numPoints * 8);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(numPoints * 2);
             byteBuffer.order(ByteOrder.BIG_ENDIAN);
-            System.arraycopy(localDistances[i], 0, row, 0, numPoints);
+            for (int j = 0; j < numPoints; j++) {
+                row[j] = roundToShort(localDistances[i][j], max);
+            }
             byteBuffer.clear();
-            byteBuffer.asDoubleBuffer().put(row);
+            byteBuffer.asShortBuffer().put(row);
             if (i % 500 == 0) Utils.printMessage(".");
-            fc.write(byteBuffer, (filePosition + ((long) i) * numPoints * 8));
+            fc.write(byteBuffer, (filePosition + ((long) i) * numPoints * 2));
             if (csvWriter != null) {
                 String rowdata = (Arrays.toString(row)).replace("[", "").replace("]", "");
                 csvWriter.write(rowdata + "\n");
