@@ -1,121 +1,118 @@
+import math
 import numpy as np
 import pandas as pd
+from sklearn.metrics.pairwise import euclidean_distances
 import matplotlib
 
 # configure backend here
 from matplotlib import gridspec
-
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-sns.set()
 
-input_file = "../output/distance-matrix.9556.csv"
-df = pd.read_csv(input_file, header=None)
-
-
-def plot_heatmap(df, ax, axcb):
-    ax.set_title("Heatmap")
-    ax.set_xlabel("Point")
-    ax.set_ylabel("Point")
+def plot_heatmap(df):
+    # ax.set_title("Heatmap")
+    # ax.set_xlabel("Point")
+    # ax.set_ylabel("Point")
+    # cmap = sns.light_palette("red", as_cmap=True)
+    cmap = sns.diverging_palette(240, 10, sep=20, as_cmap=True)
     ax = sns.heatmap(df,
-                     annot=False, fmt="1.1f",
-                     # xticklabels=50, yticklabels=50,
-                     ax=ax,
+                     # annot=True, fmt="d",
+                     # xticklabels=True, yticklabels=True,
+                     # ax=ax,
                      # cbar=False,
-                     cbar_ax=axcb,
-                     # cmap="coolwarm_r",
-                     # square=True,
-                     # center=0.5,
+                     # cbar_ax=axcb,
+                     cmap=cmap,
+                     # cmap="coolwarm",
+                     square=True,
+                     # center=0,
                      cbar_kws={"shrink": .5},
-                     mask=df == 1)
+                     mask=df == 0
+                     )
     ax.invert_yaxis()
 
 
-def plot_histogram(df, ax):
-    ax.set_title("Histogram of distance values")
-    ax.set_xlabel("Distance")
-    ax.set_ylabel("Count")
-    ax.set_xlim(0, 1)
-    hist_value = df.values.flatten()
-    hist_value = hist_value[hist_value != 1]
-    sns.distplot(hist_value, hist=True, bins=100, kde=False, rug=False, ax=ax)
+def plot_kde(X, Y):
+    sns.kdeplot(
+            X,
+            Y,
+            cmap="Reds",
+            shade=True,
+            shade_lowest=False)
 
 
-def plot_projection(df, ax_x, ax_y):
-    size = len(df.columns)
-    points = range(size)
-    counts = np.zeros(len(df.columns))
-
-    for col in df.columns:
-        counts[col] = (sum(list(map((lambda x: 0 if x == 1 else 1), df[col]))))
-
-    local_df = pd.DataFrame({'Point': points, 'Count': counts})
-    # num_bins = 160
-    # plt.hist(local_df['Count'], bins=num_bins)
-    # sns.barplot(x='Point', y='Count',
-    #             data=local_df,
-    #             ax=ax_x,
-    #             color='darkblue')
-    #
-    # sns.barplot(x='Count', y='Point',
-    #             data=local_df,
-    #             ax=ax_y,
-    #             color='darkblue',
-    #             orient='h')
-    # ax_y.invert_yaxis()
-
-    ax_x.set_xlabel('Point')
-    ax_x.set_ylabel('Count')
-    ax_x.set_title("Histogram of point distances")
-    ax_x.bar(local_df['Point'],
-             local_df['Count'],
-             width=1.0, color='darkblue',
-             align='edge')
-    ax_x.set_xlim(0, size)
-    plt.setp(ax_x.get_xticklabels(), rotation=90)
-
-    ax_y.set_title("Histogram (rotated) of point distances")
-    ax_y.set_xlabel('Count')
-    ax_y.set_ylabel('Point')
-    ax_y.barh(local_df['Point'],
-              local_df['Count'],
-              height=1.0,
-              color='darkblue',
-              align='edge')
-    ax_y.set_ylim(0, size)
-    # plt.setp(ax_y.get_yticklabels(), rotation=90)
+def get_location(v, minV, maxV, ntick):
+    tick = (maxV - minV) / ntick
+    loc = math.floor((v - minV) / tick)
+    if (loc >= ntick):
+        loc = ntick - 1
+    return loc
 
 
-# fig = plt.figure(figsize=(26, 25))
-fig = plt.figure(figsize=(10, 10))
-# fig.suptitle("Heatmap with x y axis projection and distance histgram\nDataset: " + input_file, fontsize=16)
-fig.suptitle(
-    "Heatmap with x y axis projection and distance histgram\n"
-    "Distance formula:(1.0 / score - 1.0 / max) * min * max / (max - min)\n"
-    "Dataset: " + input_file)
-# plt.title("Heatmap with x y axis projection and distance histgram\nDataset: " + input_file)
-# ax_yprojection = plt.subplot2grid((2, 3), (0, 0))
-# ax_heatmap = plt.subplot2grid((2, 3), (0, 1))
-# ax_cb = plt.subplot2grid((2, 3), (0, 2))
-# ax_histogram = plt.subplot2grid((2, 3), (1, 0))
-# ax_xprojection = plt.subplot2grid((2, 3), (1, 1))
+def get_density_df(X, Y, nrow, ncol):
+    dens = np.zeros(shape=(nrow, ncol), dtype=int)
+    minX = min(X)
+    maxX = math.ceil(max(X))
+    stepX = (maxX - minX) / ncol
+    print(minX, maxX, stepX)
+    minY = min(Y)
+    maxY = math.ceil(max(Y))
+    stepY = (maxY - minY) / nrow
+    print(minY, maxY, stepY)
+    for idx in range(len(X)):
+        x = X[idx]
+        y = Y[idx]
+        j = get_location(x, minX, maxX, ncol)
+        i = get_location(y, minY, maxY, nrow)
+        # print(x, y, i, j)
+        dens[i, j] = dens[i, j] + 1
+    df = pd.DataFrame(dens,
+            index=map("{0:1.2f}".format,
+                np.arange(minY, maxY, stepY, dtype=float)),
+            columns=map("{0:1.1f}".format,
+                np.arange(minX, maxX, stepX, dtype=float)))
+    return df
 
-spec = gridspec.GridSpec(ncols=3, nrows=2, width_ratios=[1, 1, 0.08], height_ratios=[1, 1])
-ax_xprojection = fig.add_subplot(spec[1, 1])
-ax_yprojection = fig.add_subplot(spec[0, 0])
-ax_heatmap = fig.add_subplot(spec[0, 1], sharex=ax_xprojection, sharey=ax_yprojection)
-ax_cb = fig.add_subplot(spec[0, 2])
-ax_histogram = fig.add_subplot(spec[1, 0])
 
-plot_heatmap(df, ax_heatmap, ax_cb)
-plot_histogram(df, ax_histogram)
-plot_projection(df, ax_xprojection, ax_yprojection)
+def main():
+    sns.set()
+    input_file = "../data/distance-matrix.9556.csv"
+    damds_out = "../data/damds-points.9556.txt"
+    distance_df = pd.read_csv(input_file, header=None)
+    damds_df = pd.read_csv(damds_out, usecols=[1, 2, 3], header=None, delim_whitespace=True)
+    # damds_df = damds_df.head()
+    mds_dist_df = euclidean_distances(damds_df, damds_df)
+    # print(mds_dist_df)
+    fig = plt.figure(figsize=(10, 10))
+    fig.suptitle(
+        "Heatmap of density\n"
+        "Distance formula: (1.0 / score - 1.0 / max) * min * max / (max - min)\n"
+        "Dataset: " + input_file + "\n"
+        "Dataset: " + damds_out)
 
-# ax_heatmap.get_shared_x_axes().join(ax_heatmap, ax_xprojection)
+    X = np.matrix(mds_dist_df).getA1()
+    Y = np.matrix(distance_df).getA1()
+    print(X)
+    print(Y)
+    print("X size:", len(X))
+    print("Y size:", len(Y))
+    plot_kde(X, Y)
+    # dens = get_density_df(X, Y, 100, 100)
+    # print(dens)
+    # print("Sum:")
+    # print(dens.values.sum())
+    # plt.plot(X, Y, 'o')
 
-fig.tight_layout()
-fig.subplots_adjust(top=0.88)
-plt.savefig(input_file + "-assembled.png", dpi=400)
+    # plot_heatmap(distance_df, ax_heatmap, ax_cb)
+    # plot_heatmap(mds_dist_df, ax_heatmap, ax_cb)
+    # plot_heatmap(dens)
+
+    # fig.tight_layout()
+    # fig.subplots_adjust(top=0.88, bottom=0.08)
+    plt.savefig(input_file + "-heatmap.png", dpi=400)
+
+
+if __name__=="__main__":
+    main()
