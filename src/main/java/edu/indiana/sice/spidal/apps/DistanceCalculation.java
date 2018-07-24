@@ -12,6 +12,7 @@ import java.util.Arrays;
 
 import static edu.indiana.sice.spidal.apps.Utils.calculateDistance;
 import static edu.indiana.sice.spidal.apps.Utils.roundToShort;
+import static edu.indiana.sice.spidal.apps.Utils.weightRoundToShort;
 
 class DistanceCalculation {
 
@@ -31,13 +32,35 @@ class DistanceCalculation {
         return new double[]{min, max};
     }
 
-    static void run(final String inputFile, final String outputFile, final int numPoints, final int dimension, final String outputFileCsv) throws MPIException, IOException {
+    private static double[] calculateWeights(final double[][] localDistances, final int numPoints) throws MPIException {
+        double lessOnePoints = 0, atOnePoints = 0;
+        for (int i = 0; i < ParallelOps.procRowCount; i++) {
+            for (int j = 0; j < numPoints; j++) {
+                double distance = localDistances[i][j];
+                if (distance >= 0 && distance < 1.0) {
+                    lessOnePoints++;
+                } else {
+                    atOnePoints++;
+                }
+            }
+        }
+        lessOnePoints = ParallelOps.allReduce(lessOnePoints);
+        atOnePoints = ParallelOps.allReduce(atOnePoints);
+        Utils.printMessage("# D < 0.8: " + lessOnePoints);
+        Utils.printMessage("# D >= 0.8: " + atOnePoints);
+        double sum = lessOnePoints + atOnePoints;
+        return new double[]{atOnePoints / sum, lessOnePoints / sum};
+    }
+
+    static void run(final String inputFile, final String outputFile, final int numPoints, final int dimension, final String outputWeight, final String outputFileCsv) throws MPIException, IOException {
         Utils.printMessage("Starting with " + ParallelOps.worldProcsCount + "Processes");
         double newMean = 0;
         double newSd = 0.1;
         BufferedReader br = Files.newBufferedReader(Paths.get(inputFile));
         FileOutputStream fos = new FileOutputStream(outputFile);
+        FileOutputStream weightFos = new FileOutputStream(outputWeight);
         FileChannel fc = fos.getChannel();
+        FileChannel weightFc = weightFos.getChannel();
         BufferedWriter csvWriter = null;
         if (outputFileCsv != null) {
             csvWriter = new BufferedWriter(new FileWriter(outputFileCsv, false));
@@ -135,9 +158,16 @@ class DistanceCalculation {
         max = ParallelOps.allReduceMax(max);
         Utils.printMessage("Done Replacing distance larger than 3*SD with 3*SD, Max is : " + max);
 
+        final double[] weights = calculateWeights(localDistances, numPoints);
+        final double weight1 = weights[0];
+        final double weight2 = weights[1];
+        Utils.printMessage("Weight1:" + weight1);
+        Utils.printMessage("Weight2:" + weight2);
+
         short[] row = new short[numPoints];
         long filePosition = ((long) ParallelOps.procRowStartOffset) * numPoints * 2;
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
+            // distance matrix
             ByteBuffer byteBuffer = ByteBuffer.allocate(numPoints * 2);
             byteBuffer.order(ByteOrder.BIG_ENDIAN);
             for (int j = 0; j < numPoints; j++) {
@@ -145,15 +175,28 @@ class DistanceCalculation {
             }
             byteBuffer.clear();
             byteBuffer.asShortBuffer().put(row);
-            if (i % 500 == 0) Utils.printMessage(".");
             fc.write(byteBuffer, (filePosition + ((long) i) * numPoints * 2));
+
+            // optional csv dump
             if (csvWriter != null) {
                 String rowdata = (Arrays.toString(row)).replace("[", "").replace("]", "");
                 csvWriter.write(rowdata + "\n");
             }
+
+            // weight matrix
+            ByteBuffer weightByteBuffer = ByteBuffer.allocate(numPoints * 2);
+            weightByteBuffer.order(ByteOrder.BIG_ENDIAN);
+            for (int j = 0; j < numPoints; j++) {
+                row[j] = weightRoundToShort(localDistances[i][j], weight1, weight2);
+            }
+            weightByteBuffer.clear();
+            weightByteBuffer.asShortBuffer().put(row);
+            weightFc.write(weightByteBuffer, (filePosition + ((long) i) * numPoints * 2));
+            if (i % 500 == 0) Utils.printMessage(".");
         }
 
         fc.close();
+        weightFc.close();
         if (csvWriter != null) csvWriter.close();
         System.out.println("Process " + ParallelOps.worldProcRank + " Done");
     }

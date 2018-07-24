@@ -12,6 +12,7 @@ public class CSVFileProcessor {
     private final static String OUTPUT_OPTION = "output";
     private static final String DIM_OPTION = "dim";
     private static final String POINTS_OPTION = "points";
+    private static final String OUTPUT_WEIGHT = "output_weight";
     private static final String OUTPUT_CSV = "output_csv";
 
     private static Options setupOptions() {
@@ -35,6 +36,11 @@ public class CSVFileProcessor {
                 .hasArg()
                 .desc("Output file path")
                 .build();
+        final Option outputWeight = Option.builder(OUTPUT_WEIGHT)
+                .required()
+                .hasArg()
+                .desc("Output path of the weight matrix")
+                .build();
         final Option outputCsv = Option.builder(OUTPUT_CSV)
                 .optionalArg(true)
                 .hasArg()
@@ -46,6 +52,7 @@ public class CSVFileProcessor {
                 .addOption(points)
                 .addOption(dimension)
                 .addOption(output)
+                .addOption(outputWeight)
                 .addOption(outputCsv);
         return options;
     }
@@ -59,6 +66,7 @@ public class CSVFileProcessor {
             int points = Integer.parseInt(commandLine.getOptionValue(POINTS_OPTION));
             int dimension = Integer.parseInt(commandLine.getOptionValue(DIM_OPTION));
             String output = commandLine.getOptionValue(OUTPUT_OPTION);
+            String outputWeight = commandLine.getOptionValue(OUTPUT_WEIGHT);
             String outputCsv = null;
             if (commandLine.hasOption(OUTPUT_CSV)) {
                 outputCsv = commandLine.getOptionValue(OUTPUT_CSV);
@@ -66,7 +74,7 @@ public class CSVFileProcessor {
 
             System.out.println("Running the distance calculation:" + Arrays.toString(args));
             ParallelOps.setupParallelism(args);
-            DistanceCalculation.run(input, output, points, dimension, outputCsv);
+            DistanceCalculation.run(input, output, points, dimension, outputWeight, outputCsv);
             ParallelOps.tearDownParallelism();
         } catch (MPIException | IOException e) {
             e.printStackTrace();
