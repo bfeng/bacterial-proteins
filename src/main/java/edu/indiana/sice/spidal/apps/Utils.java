@@ -26,13 +26,13 @@ public class Utils {
         return (short) Math.round((value / max) * Short.MAX_VALUE);
     }
 
-    static short weightRoundToShort(double value, double weight1, double weight2) {
-        double weight;
+    static short selectWeight(double value, short weight1, short weight2) {
+        short weight;
         if (value >= 0 && value < 1.0) {
             weight = weight1;
         } else
-            weight = weight2;
-        return (short) Math.round(weight * Short.MAX_VALUE);
+            weight = (short) (weight2 / 10);
+        return weight;
     }
 
     static double calculateDistance(double x[], int a, int b, double min, double max) {

@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import static edu.indiana.sice.spidal.apps.Utils.calculateDistance;
 import static edu.indiana.sice.spidal.apps.Utils.roundToShort;
-import static edu.indiana.sice.spidal.apps.Utils.weightRoundToShort;
+import static edu.indiana.sice.spidal.apps.Utils.selectWeight;
 
 class DistanceCalculation {
 
@@ -32,7 +32,7 @@ class DistanceCalculation {
         return new double[]{min, max};
     }
 
-    private static double[] calculateWeights(final double[][] localDistances, final int numPoints) throws MPIException {
+    private static short[] calculateWeights(final double[][] localDistances, final int numPoints) throws MPIException {
         double lessOnePoints = 0, atOnePoints = 0;
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
             for (int j = 0; j < numPoints; j++) {
@@ -46,10 +46,16 @@ class DistanceCalculation {
         }
         lessOnePoints = ParallelOps.allReduce(lessOnePoints);
         atOnePoints = ParallelOps.allReduce(atOnePoints);
-        Utils.printMessage("# D < 0.8: " + lessOnePoints);
-        Utils.printMessage("# D >= 0.8: " + atOnePoints);
+        Utils.printMessage("# D < 1: " + lessOnePoints);
+        Utils.printMessage("# D = 1: " + atOnePoints);
         double sum = lessOnePoints + atOnePoints;
-        return new double[]{atOnePoints / sum, lessOnePoints / sum};
+        double we1 = lessOnePoints / sum;
+        double we2 = atOnePoints / sum;
+        Utils.printMessage("Weight1 (double):" + we1);
+        Utils.printMessage("Weight2 (double):" + we2);
+        short w1 = (short) Math.round(we1);
+        short w2 = (short) Math.round(we2);
+        return new short[]{w1, w2};
     }
 
     static void run(final String inputFile, final String outputFile, final int numPoints, final int dimension, final String outputWeight, final String outputFileCsv) throws MPIException, IOException {
@@ -158,11 +164,11 @@ class DistanceCalculation {
         max = ParallelOps.allReduceMax(max);
         Utils.printMessage("Done Replacing distance larger than 3*SD with 3*SD, Max is : " + max);
 
-        final double[] weights = calculateWeights(localDistances, numPoints);
-        final double weight1 = weights[0];
-        final double weight2 = weights[1];
-        Utils.printMessage("Weight1:" + weight1);
-        Utils.printMessage("Weight2:" + weight2);
+        final short[] weights = calculateWeights(localDistances, numPoints);
+        final short weight1 = weights[0];
+        final short weight2 = weights[1];
+        Utils.printMessage("Weight1 (short):" + weight1);
+        Utils.printMessage("Weight2 (short):" + weight2);
 
         short[] row = new short[numPoints];
         long filePosition = ((long) ParallelOps.procRowStartOffset) * numPoints * 2;
@@ -187,7 +193,7 @@ class DistanceCalculation {
             ByteBuffer weightByteBuffer = ByteBuffer.allocate(numPoints * 2);
             weightByteBuffer.order(ByteOrder.BIG_ENDIAN);
             for (int j = 0; j < numPoints; j++) {
-                row[j] = weightRoundToShort(localDistances[i][j], weight1, weight2);
+                row[j] = selectWeight(localDistances[i][j], weight1, weight2);
             }
             weightByteBuffer.clear();
             weightByteBuffer.asShortBuffer().put(row);
