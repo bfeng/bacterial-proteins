@@ -54,7 +54,7 @@ class DistanceCalculation {
         Utils.printMessage("Weight1 (double):" + we1);
         Utils.printMessage("Weight2 (double):" + we2);
         short w1 = (short) Math.round(we1 * Short.MAX_VALUE);
-        short w2 = (short) Math.round(we2 * Short.MAX_VALUE);
+        short w2 = (short) Math.round(we2 * Short.MAX_VALUE / 10);
         return new short[]{w1, w2};
     }
 

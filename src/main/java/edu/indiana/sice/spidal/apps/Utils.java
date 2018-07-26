@@ -31,7 +31,7 @@ public class Utils {
         if (value >= 0 && value < 1.0) {
             weight = weight1;
         } else
-            weight = (short) (weight2 / 10);
+            weight = weight2;
         return weight;
     }
 
