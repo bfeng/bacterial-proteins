@@ -3,8 +3,7 @@ package edu.indiana.sice.spidal.apps;
 import edu.indiana.sice.dscspidal.mpicommonio.MatrixFile;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 class Row {
     long start;
@@ -34,7 +33,7 @@ public class DataConverter {
     private static String matrixPath;
 
     private static void buildIndices(String input) throws IOException {
-        indices = new ArrayList<>();
+        Set<Long> indexSet = new HashSet<>();
 
         FileReader fileReader = new FileReader(input);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
@@ -42,14 +41,10 @@ public class DataConverter {
         while ((line = bufferedReader.readLine()) != null) {
             Row row = new Row(line);
 
-            if (indices.indexOf(row.start) == -1) {
-                indices.add(row.start);
-            }
-
-            if (indices.indexOf(row.end) == -1) {
-                indices.add(row.end);
-            }
+            indexSet.add(row.start);
+            indexSet.add(row.end);
         }
+        indices = new ArrayList<>(indexSet);
         bufferedReader.close();
         fileReader.close();
     }
