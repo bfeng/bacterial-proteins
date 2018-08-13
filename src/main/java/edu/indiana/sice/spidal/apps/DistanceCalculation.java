@@ -54,8 +54,10 @@ class DistanceCalculation {
         Utils.printMessage("Weight1 (double):" + we1);
         Utils.printMessage("Weight2 (double):" + we2);
         short w1 = (short) Math.round(we1 * Short.MAX_VALUE);
-        short w2 = (short) Math.round(we2 * Short.MAX_VALUE / 10);
-        return new short[]{w1, w2};
+//        short w2 = (short) Math.round(we2 * Short.MAX_VALUE / 10);
+//        return new short[]{w1, w2};
+        // we arbitrarily set w2 to zero
+        return new short[]{w1, 0};
     }
 
     static void run(final String inputFile, final String outputFile, final int numPoints, final int dimension, final String outputWeight, final String outputFileCsv) throws MPIException, IOException {
@@ -116,17 +118,6 @@ class DistanceCalculation {
         }
         Utils.printMessage("End calculating mean and sd");
 
-        //Update value with new normalized values
-//        Utils.printMessage("Start calculating normalized data");
-//
-//        for (int i = 0; i < numPoints; i++) {
-//            for (int j = 0; j < dimension; j++) {
-//                if (sd[j] == 0) continue;
-//                points[i][j] = newMean + ((points[i][j] - means[j]) / sd[j]) * newSd;
-//            }
-//        }
-//
-//        Utils.printMessage("End calculating normalized data");
 
         double[][] localDistances = new double[ParallelOps.procRowCount][numPoints];
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
@@ -152,17 +143,15 @@ class DistanceCalculation {
         Utils.printMessage("Distance SD : " + disSd);
 
 
-        Utils.printMessage("Replacing distance larger than 3*SD with 3*SD");
         for (int i = 0; i < ParallelOps.procRowCount; i++) {
             for (int j = 0; j < numPoints; j++) {
-                if (localDistances[i][j] > (disMean + 3 * disSd)) localDistances[i][j] = (disMean + 3 * disSd);
+//                if (localDistances[i][j] > (disMean + 3 * disSd)) localDistances[i][j] = (disMean + 3 * disSd);
                 if (localDistances[i][j] > max) {
                     max = localDistances[i][j];
                 }
             }
         }
         max = ParallelOps.allReduceMax(max);
-        Utils.printMessage("Done Replacing distance larger than 3*SD with 3*SD, Max is : " + max);
 
         final short[] weights = calculateWeights(localDistances, numPoints);
         final short weight1 = weights[0];

@@ -1,33 +1,38 @@
 package edu.indiana.sice.spidal.apps;
 
-import edu.indiana.sice.dscspidal.mpicommonio.MatrixFile;
+
+import edu.indiana.sice.dscspidal.mpicommonio.SparseMatrixFile;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-class Row {
-    long start;
-    long end;
-    double score;
 
-    Row(String rowLine) {
-        String[] arr = rowLine.split("\t", 3);
-        start = Long.parseLong(arr[0]);
-        end = Long.parseLong(arr[1]);
-        score = Double.parseDouble(arr[2]);
+public class ScoreMatrixGenerator {
+
+    private static class Link {
+        long start;
+        long end;
+        double score;
+
+        Link(String rowLine) {
+            String[] arr = rowLine.split("\t", 3);
+            start = Long.parseLong(arr[0]);
+            end = Long.parseLong(arr[1]);
+            score = Double.parseDouble(arr[2]);
+        }
+
+        @Override
+        public String toString() {
+            return "Link{" +
+                    "start=" + start +
+                    ", end=" + end +
+                    ", score=" + score +
+                    '}';
+        }
     }
-
-    @Override
-    public String toString() {
-        return "Row{" +
-                "start=" + start +
-                ", end=" + end +
-                ", score=" + score +
-                '}';
-    }
-}
-
-public class DataConverter {
 
     private static List<Long> indices;
     private static String matrixPath;
@@ -39,10 +44,10 @@ public class DataConverter {
         BufferedReader bufferedReader = new BufferedReader(fileReader);
         String line;
         while ((line = bufferedReader.readLine()) != null) {
-            Row row = new Row(line);
+            Link link = new Link(line);
 
-            indexSet.add(row.start);
-            indexSet.add(row.end);
+            indexSet.add(link.start);
+            indexSet.add(link.end);
         }
         indices = new ArrayList<>(indexSet);
         bufferedReader.close();
@@ -56,20 +61,20 @@ public class DataConverter {
         matrixPath = output + ".matrix-file.bin";
         FileReader fileReader = new FileReader(input);
         BufferedReader bufferedReader = new BufferedReader(fileReader);
-        MatrixFile matrixFile = new MatrixFile(matrixPath, indices.size(), indices.size());
+        SparseMatrixFile matrixFile = new SparseMatrixFile(matrixPath, indices.size(), indices.size());
         matrixFile.open();
         String line;
         while ((line = bufferedReader.readLine()) != null) {
-            Row row = new Row(line);
+            Link link = new Link(line);
 
-            int rowIdx = indices.indexOf(row.start);
-            int colIdx = indices.indexOf(row.end);
+            int rowIdx = indices.indexOf(link.start);
+            int colIdx = indices.indexOf(link.end);
 
             assert rowIdx != -1 && colIdx != -1;
 
             // Symmetric matrix
-            matrixFile.writeTo(rowIdx, colIdx, row.score);
-            matrixFile.writeTo(colIdx, rowIdx, row.score);
+            matrixFile.set(rowIdx, colIdx, link.score);
+            matrixFile.set(colIdx, rowIdx, link.score);
 
         }
         matrixFile.close();
@@ -82,20 +87,17 @@ public class DataConverter {
     private static void dumpToCSV(String output) throws IOException {
         assert matrixPath != null;
 
-        MatrixFile matrixFile = new MatrixFile(matrixPath, indices.size(), indices.size());
+        SparseMatrixFile matrixFile = new SparseMatrixFile(matrixPath, indices.size(), indices.size());
         FileWriter fileWriter = new FileWriter(output);
         BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         matrixFile.open();
 
         for (long i = 0; i < indices.size(); i++) {
             StringBuilder stringBuilder = new StringBuilder();
+            double[] row = matrixFile.getRow(i);
+            assert row.length == indices.size();
             for (long j = 0; j < indices.size(); j++) {
-                double v = 0;
-                try {
-                    v = matrixFile.readFrom(i, j);
-                } catch (EOFException ignored) {
-                    // If out of range, the value should be 0.
-                }
+                double v = row[(int) j];
                 stringBuilder.append(v);
                 if (j != indices.size() - 1)
                     stringBuilder.append(',');
@@ -105,13 +107,13 @@ public class DataConverter {
         }
 
         matrixFile.close();
-        matrixFile.delete();
+//        matrixFile.delete();
         bufferedWriter.close();
         fileWriter.close();
     }
 
     private static void printUsage() {
-        System.out.println(DataConverter.class.getCanonicalName() + " <input> <output>");
+        System.out.println(ScoreMatrixGenerator.class.getCanonicalName() + " <input> <output>");
     }
 
     public static void main(String[] args) throws IOException {
@@ -131,9 +133,9 @@ public class DataConverter {
         System.out.println("Step 2: converting to a matrix...");
         generateMatrixFile(input, output);
         System.out.println("Step 2: done");
-        System.out.println("Step 3: writing into a CSV file...");
-        dumpToCSV(output);
-        System.out.println("Step 3: done");
+//        System.out.println("Step 3: writing into a CSV file...");
+//        dumpToCSV(output);
+//        System.out.println("Step 3: done");
 
         long endTime = System.currentTimeMillis();
 
