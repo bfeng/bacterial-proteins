@@ -1,13 +1,11 @@
 package edu.indiana.sice.spidal.apps;
 
 
+import edu.indiana.sice.dscspidal.mpicommonio.SparseMatrix;
 import edu.indiana.sice.dscspidal.mpicommonio.SparseMatrixFile;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 public class ScoreMatrixGenerator {
@@ -35,6 +33,7 @@ public class ScoreMatrixGenerator {
     }
 
     private static List<Long> indices;
+    private static Map<Long, Integer> indexMap;
     private static String matrixPath;
 
     private static void buildIndices(String input) throws IOException {
@@ -52,6 +51,10 @@ public class ScoreMatrixGenerator {
         indices = new ArrayList<>(indexSet);
         bufferedReader.close();
         fileReader.close();
+        indexMap = new HashMap<>(indices.size());
+        for (int i = 0; i < indices.size(); i++) {
+            indexMap.put(indices.get(i), i);
+        }
     }
 
     private static void generateMatrixFile(String input, String output) throws IOException {
@@ -84,6 +87,41 @@ public class ScoreMatrixGenerator {
         System.out.printf("Time spent: %ds\n", Math.abs(endTime - startTime) / 1000);
     }
 
+    private static void dumpToMatrixFile(String input, String output) throws IOException {
+        assert indices != null;
+
+        long startTime = System.currentTimeMillis();
+        matrixPath = output + ".matrix-file.bin";
+        FileReader fileReader = new FileReader(input);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
+        SparseMatrix sparseMatrix = new SparseMatrix(indices.size(), indices.size());
+        String line;
+        long counter = 0;
+        while ((line = bufferedReader.readLine()) != null) {
+            Link link = new Link(line);
+
+            int rowIdx = indexMap.get(link.start);
+            int colIdx = indexMap.get(link.end);
+
+            assert rowIdx != -1 && colIdx != -1;
+
+            // Symmetric matrix
+            sparseMatrix.set(rowIdx, colIdx, link.score);
+            sparseMatrix.set(colIdx, rowIdx, link.score);
+
+            if (counter % 1_000_000 == 0) {
+                System.out.println(counter / 1_000_000 + "M ...");
+            }
+            counter++;
+        }
+        bufferedReader.close();
+        fileReader.close();
+        System.out.println("Start dumping files....");
+        SparseMatrixFile.dumpToFile(sparseMatrix, matrixPath);
+        long endTime = System.currentTimeMillis();
+        System.out.printf("Time spent: %ds\n", Math.abs(endTime - startTime) / 1000);
+    }
+
     private static void dumpToCSV(String output) throws IOException {
         assert matrixPath != null;
 
@@ -107,7 +145,7 @@ public class ScoreMatrixGenerator {
         }
 
         matrixFile.close();
-//        matrixFile.delete();
+        matrixFile.delete();
         bufferedWriter.close();
         fileWriter.close();
     }
@@ -131,7 +169,8 @@ public class ScoreMatrixGenerator {
         System.out.println("Step 1: done");
         System.out.printf("Length of indices: %d\n", indices.size());
         System.out.println("Step 2: converting to a matrix...");
-        generateMatrixFile(input, output);
+//        generateMatrixFile(input, output);
+        dumpToMatrixFile(input, output);
         System.out.println("Step 2: done");
 //        System.out.println("Step 3: writing into a CSV file...");
 //        dumpToCSV(output);
