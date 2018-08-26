@@ -1,12 +1,12 @@
 package edu.indiana.sice.spidal.apps;
 
+import edu.indiana.sice.dscspidal.mpicommonio.SparseMatrix;
+import edu.indiana.sice.dscspidal.mpicommonio.SparseMatrixFile;
 import mpi.MPI;
 import mpi.MPIException;
 import mpi.Status;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.IntBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -44,6 +44,7 @@ public class MPIScoreMatrixGenerator {
     private static int MASTER = 0;
     private static String source;
     private static String outputDir;
+    private static boolean dumpCSV;
 
     private static long nLines = 0;
     private static long rowStart;
@@ -71,6 +72,9 @@ public class MPIScoreMatrixGenerator {
         worldProcRank = MPI.COMM_WORLD.getRank();
         source = args[0];
         outputDir = args[1];
+        if (args.length == 3 && args[2].equals("-d")) {
+            dumpCSV = true;
+        }
     }
 
     private static void partitionByRank() {
@@ -163,12 +167,71 @@ public class MPIScoreMatrixGenerator {
         allPrintln("IndexMap.size=" + indexMap.size());
     }
 
-    private static void dumpPartitionFiles(String input, String outputDir) throws IOException {
+    private static void dumpPartitionFiles(String input, String outputDir) throws IOException, MPIException {
+        MPI.COMM_WORLD.barrier();
         assert indexMap != null;
 
-        String matrixPath = String.format("%s/%d-matrix-file-part-%04d.bin", outputDir, indexMap.size(), worldProcRank);
-
+        final String matrixPath = String.format("%s/%d-matrix-file-part-%04d.bin", outputDir, indexMap.size(), worldProcRank);
         allPrintln("Matrix partition:" + matrixPath);
+
+        SparseMatrix sparseMatrix = new SparseMatrix(indexMap.size(), indexMap.size());
+        long counter = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(source))) {
+            for (long i = 1; i <= rowEnd; i++) {
+                if (i < rowStart) {
+                    br.readLine();
+                } else {
+                    String line = br.readLine();
+                    Link link = new Link(line);
+
+                    int rowIdx = indexMap.get(link.start);
+                    int colIdx = indexMap.get(link.end);
+
+                    assert rowIdx != -1 && colIdx != -1;
+
+                    // Symmetric matrix
+                    sparseMatrix.set(rowIdx, colIdx, link.score);
+                    sparseMatrix.set(colIdx, rowIdx, link.score);
+
+                    if (counter % 1_000_000 == 0) {
+                        System.out.println('.');
+                    }
+                    counter++;
+                }
+            }
+        }
+
+        allPrintln("Local sparse matrix done");
+        allPrintln("Start dumping:" + matrixPath);
+        File matrixFile = new File(matrixPath);
+        SparseMatrixFile.dumpToFile(sparseMatrix, matrixFile);
+        allPrintln("Partition done:" + matrixPath);
+    }
+
+    private static void dumpToCSV() throws IOException, MPIException {
+        MPI.COMM_WORLD.barrier();
+        final String matrixPath = String.format("%s/%d-matrix-file-part-%04d.bin", outputDir, indexMap.size(), worldProcRank);
+
+        File matrixFile = new File(matrixPath);
+
+        SparseMatrix sparseMatrix = SparseMatrixFile.loadIntoMemory(matrixFile, 0, indexMap.size() - 1, indexMap.size());
+        FileWriter fileWriter = new FileWriter(matrixPath + ".csv");
+        BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+        for (int i = 0; i < indexMap.size(); i++) {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int j = 0; j < indexMap.size(); j++) {
+                double v = sparseMatrix.get(i, j);
+                stringBuilder.append(v);
+                if (j != indexMap.size() - 1)
+                    stringBuilder.append(',');
+            }
+            stringBuilder.append('\n');
+            bufferedWriter.write(stringBuilder.toString());
+        }
+
+        bufferedWriter.close();
+        fileWriter.close();
     }
 
     public static void main(String[] args) throws MPIException, IOException {
@@ -181,6 +244,9 @@ public class MPIScoreMatrixGenerator {
         buildIndices();
 
         dumpPartitionFiles(source, outputDir);
+
+        if (dumpCSV)
+            dumpToCSV();
 
         MPI.Finalize();
     }
