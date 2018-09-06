@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-datafile="../data/data.tsv"
+datafile="../data/24520-points-filtered.tsv"
 
 n=$(awk -F ' ' '{print $1,$2}' ${datafile} | tr " " "\n" | sort | uniq | wc -w)
 min=$(awk -F ' ' '{print $3}' ${datafile} | sort -g | head -n 1)

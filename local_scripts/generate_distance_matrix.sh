@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 jar="../target/bacterial-proteins-jar-with-dependencies.jar"
-dataFile=../output/score-matrix.csv
+dataFile=../data/score-matrix.csv
 points=799
 dimension=799
 outFile=../output/distance-matrix.bin
