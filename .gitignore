@@ -1,10 +1,16 @@
-*.iml
-.idea/
-target/
-scripts/*.bin
-data/*
-!data/data.tsv
-bin/*
-output/*
-results/*
-.Rproj.user
+# Ignore everything
+*
+
+# But descend into directories
+!*/
+
+# Recursively allow files under subtree
+!/analysis/*.R
+
+!/src/**
+!/tempest_scripts/*
+
+!/scratch/*
+/scratch/*.iml
+
+!.gitignore
