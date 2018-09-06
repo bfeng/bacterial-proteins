@@ -3,9 +3,11 @@
 #SBATCH -N 1                 # Number of nodes
 #SBATCH --tasks-per-node=32
 
-rm ../output/*
+date
 
-./generate_adajacency_matrix.sh
+rm /share/project2/FG546/bfeng/work/*
+
+./generate_score_matrix.sh
 
 ./generate_distance_matrix.sh
 
@@ -15,6 +17,8 @@ rm ../output/*
 
 rm *.bin
 
-./run_dapwc.sh
+#./run_dapwc.sh
 
-./merge_and_format.sh ../output/damds-points.txt ../output/cluster-M10-C10txt
+#./merge_and_format.sh ../output/damds-points.txt ../output/cluster-M10-C10txt
+
+date
