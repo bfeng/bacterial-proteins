@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cp=$HOME/.m2/repository/edu/indiana/soic/spidal/damds/1.1/damds-1.1-jar-with-dependencies.jar
+cp=$HOME/.m2/repository/edu/indiana/soic/spidal/damds/2.0/damds-2.0-jar-with-dependencies.jar
 
 confFile=./damds-config.properties
 
