@@ -9,6 +9,7 @@
 
 !/src/**
 !/tempest_scripts/*
+!/tempest_scripts/dna-configs/*
 
 !/scratch/*
 /scratch/*.iml
