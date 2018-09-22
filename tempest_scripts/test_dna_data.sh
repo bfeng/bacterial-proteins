@@ -7,12 +7,12 @@ run(){
     local case=$(printf "%02d" ${1})
     local cp=${2}
     local conf=${3}
-    if [ -f $conf ]; then
+    if [ -f $conf ] && [ -f $cp ]; then
         printf "[%s]: %s %s\n" $case $cp $conf
-        echo "mpirun -oversubscribe --mca btl_tcp_if_include enp24s0f0 -host ${hosts} -np ${nprocs} java -Xms1g -Xmx4g -cp ${cp} edu.indiana.soic.spidal.damds.Program -c ${conf} -n ${nprocs} -t 1 | tee ../output/${case}-summary.txt"
-        #rm *.bin
+        mpirun -oversubscribe --mca btl_tcp_if_include enp24s0f0 -host ${hosts} -np ${nprocs} java -Xms1g -Xmx4g -cp ${cp} edu.indiana.soic.spidal.damds.Program -c ${conf} -n ${nprocs} -t 1 | tee ../output/${case}-summary.txt
+        rm *.bin
     fi
-    sleep 10
+    sleep 1
 }
 
 configs=(
