@@ -1,8 +1,12 @@
 package edu.indiana.sice.spidal.apps;
 
 import com.google.common.io.LittleEndianDataInputStream;
+import com.google.common.io.LittleEndianDataOutputStream;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 public class DNADataConvert {
 
@@ -12,10 +16,9 @@ public class DNADataConvert {
     private static double THRESHOLD = 0.99999;
 
     private static void run() throws IOException {
-        InputStream inputStream = new FileInputStream(new File(INPUT_MATRIX));
-        LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(inputStream);
-        DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(OUTPUT_MATRIX))));
-        DataOutputStream weightOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(new File(WEIGHT_MATRIX))));
+        LittleEndianDataInputStream littleEndianDataInputStream = new LittleEndianDataInputStream(new FileInputStream(new File(INPUT_MATRIX)));
+        LittleEndianDataOutputStream dataOutputStream = new LittleEndianDataOutputStream(new FileOutputStream(new File(OUTPUT_MATRIX)));
+        LittleEndianDataOutputStream weightOutputStream = new LittleEndianDataOutputStream(new FileOutputStream(new File(WEIGHT_MATRIX)));
 
         while (littleEndianDataInputStream.available() > 0) {
             short value = littleEndianDataInputStream.readShort();
@@ -32,7 +35,6 @@ public class DNADataConvert {
         weightOutputStream.close();
         dataOutputStream.close();
         littleEndianDataInputStream.close();
-        inputStream.close();
     }
 
     public static void main(String[] args) throws IOException {

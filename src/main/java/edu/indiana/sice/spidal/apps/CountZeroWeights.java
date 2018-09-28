@@ -1,6 +1,10 @@
 package edu.indiana.sice.spidal.apps;
 
-import java.io.*;
+import com.google.common.io.LittleEndianDataInputStream;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 public class CountZeroWeights {
 
@@ -15,7 +19,7 @@ public class CountZeroWeights {
 
     private void run() {
         try {
-            DataInputStream dataInputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(weightMatrix))));
+            LittleEndianDataInputStream dataInputStream = new LittleEndianDataInputStream(new FileInputStream(new File(weightMatrix)));
 
             while (dataInputStream.available() > 0) {
                 short val = dataInputStream.readShort();
@@ -32,7 +36,7 @@ public class CountZeroWeights {
     }
 
     private void report() {
-        System.out.printf("Matrix: %s\n%d/%d", weightMatrix, zeroCounts, totalCounts);
+        System.out.printf("Matrix: %s\n%d/%d\n", weightMatrix, zeroCounts, totalCounts);
     }
 
     public static void main(String[] args) {
