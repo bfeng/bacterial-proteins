@@ -11,6 +11,7 @@
 !/local_scripts/*.sh
 !/tempest_scripts/*
 !/tempest_scripts/dna-configs/*
+!/tempest_scripts/test-dna/*.*
 
 !/results/DNA-data/from-pulasthi/*
 
