@@ -26,6 +26,12 @@ configs=(
 ./dna-configs/08-config.properties
 ./dna-configs/09-config.properties
 ./dna-configs/10-config.properties
+./dna-configs/11-config.properties
+./dna-configs/12-config.properties
+./dna-configs/13-config.properties
+./dna-configs/14-config.properties
+./dna-configs/15-config.properties
+./dna-configs/16-config.properties
 )
 
 cps=(
