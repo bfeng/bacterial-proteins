@@ -8,6 +8,7 @@
 !/analysis/*.R
 
 !/src/**
+!/local_scripts/*.sh
 !/tempest_scripts/*
 !/tempest_scripts/dna-configs/*
 
