@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 conf=config-o.properties
 cp=$HOME/.m2/repository/edu/indiana/soic/spidal/damds/1.1/damds-1.1-jar-with-dependencies.jar
 nprocs=4
