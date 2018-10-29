@@ -12,6 +12,8 @@
 !/tempest_scripts/*
 !/tempest_scripts/dna-configs/*
 
+!/results/DNA-data/from-pulasthi/*
+
 !/scratch/*
 /scratch/*.iml
 
