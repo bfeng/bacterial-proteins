@@ -16,22 +16,10 @@ run(){
 }
 
 configs=(
-./dna-configs/01-config.properties
-./dna-configs/02-config.properties
-./dna-configs/03-config.properties
-./dna-configs/04-config.properties
-./dna-configs/05-config.properties
-./dna-configs/06-config.properties
-./dna-configs/07-config.properties
-./dna-configs/08-config.properties
-./dna-configs/09-config.properties
-./dna-configs/10-config.properties
-./dna-configs/11-config.properties
-./dna-configs/12-config.properties
-./dna-configs/13-config.properties
-./dna-configs/14-config.properties
-./dna-configs/15-config.properties
-./dna-configs/16-config.properties
+./dna-configs/17-config.properties
+./dna-configs/18-config.properties
+./dna-configs/19-config.properties
+./dna-configs/20-config.properties
 )
 
 cps=(
@@ -40,7 +28,7 @@ $HOME/.m2/repository/edu/indiana/soic/spidal/damds/2.0/damds-2.0-jar-with-depend
 )
 
 declare -i counter
-counter=0
+counter=16
 for conf in ${configs[*]}; do
     let "counter += 1"
     if [ $(( counter%2 )) -ne 0 ]; then
