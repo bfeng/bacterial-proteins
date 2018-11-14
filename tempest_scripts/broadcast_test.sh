@@ -5,7 +5,7 @@ run_test() {
     local vsize=${2}
     local sparsity=${3}
     printf "%s\t%s\t%s\t" ${nprocs} ${vsize} ${sparsity}
-    mpirun -n ${nprocs} java -cp target/mpi-common-io-2.0-SNAPSHOT-uber.jar edu.indiana.sice.dscspidal.mpicommonio.examples.SparseVectorBroadcastExample ${vsize} 10 ${sparsity}
+    mpirun -n ${nprocs} java -cp ~/.m2/repository/mpi-common-io/mpi-common-io/2.0-SNAPSHOT/mpi-common-io-2.0-SNAPSHOT-uber.jar edu.indiana.sice.dscspidal.mpicommonio.examples.SparseVectorBroadcastExample ${vsize} 10 ${sparsity}
 }
 
 sparse=(
